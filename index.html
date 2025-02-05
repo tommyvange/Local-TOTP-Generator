@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offline TOTP Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Local TOTP Generator</h1>
+
+  <div class="container">
+    <!-- Time Source Toggle -->
+    <div class="form-group">
+      <label for="timeSource">Time Source</label>
+      <select id="timeSource">
+        <option value="device">Device Time</option>
+        <option value="online">Online Time</option>
+      </select>
+      <small id="timeSourceStatus" class="time-status">Using device time</small>
+    </div>
+
+    <!-- Input Fields -->
+    <div class="form-group">
+      <label for="secret">Secret</label>
+      <input type="text" id="secret" value="" />
+    </div>
+    <div class="form-group">
+      <label for="digits">Digits</label>
+      <input type="number" id="digits" min="6" max="10" value="6" />
+    </div>
+    <div class="form-group">
+      <label for="period">Period (seconds)</label>
+      <input type="number" id="period" min="10" value="30" />
+    </div>
+    <div class="form-group">
+      <label for="algorithm">Algorithm</label>
+      <select id="algorithm">
+        <option value="SHA-1">SHA-1</option>
+        <option value="SHA-256">SHA-256</option>
+        <option value="SHA-512">SHA-512</option>
+      </select>
+    </div>
+
+    <!-- TOTP Display -->
+    <div class="totp-section">
+      <div id="countdown" class="countdown">Valid for --s</div>
+      <div id="currentTOTP" class="totp-value">------</div>
+      <div id="nextTOTP" class="next-totp">Next: ------</div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button id="copyBtn" class="btn-totp">Copy TOTP</button>
+      <button id="shareBtn" class="btn-url">Copy URL</button>
+    </div>
+  </div>
+
+  <div class="info">
+    <p>
+      This TOTP generator works <strong>fully offline</strong> using the
+      <code>Web Crypto API</code>. It automatically updates whenever fields
+      change or paste events occur.
+    </p>
+    <p>
+      The link in your browser’s address bar includes the config, so you can share it.
+
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
