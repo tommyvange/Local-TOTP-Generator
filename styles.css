@@ -12,9 +12,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  padding: 2rem;
+  /* Padding-top for content, padding-bottom so it's not hidden behind the fixed footer */
+  padding: 2rem 0 6rem;
   color: #333;
+  min-height: 100vh;
 }
 
 h1 {
@@ -146,16 +147,13 @@ button.copied {
   background: #28a745 !important; /* green for "Copied!" feedback */
 }
 
-/* Info */
+/* Info Section */
 .info {
   max-width: 450px;
   text-align: center;
   font-size: 0.9rem;
   color: #666;
-}
-
-.info p:last-of-type {
-  margin-top: 10px;
+  margin-bottom: 1rem;
 }
 
 .info code {
@@ -164,54 +162,189 @@ button.copied {
   border-radius: 4px;
 }
 
-/* Dark Mode: optional if you want to keep consistent with device preference */
+/* ADVANCED SETTINGS TOGGLE (Light Mode) */
+.advanced-settings-toggle {
+  display: inline-block;
+  cursor: pointer;
+  color: #007BFF;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  user-select: none;
+  text-decoration: none;
+}
+
+.advanced-settings-toggle:hover {
+  text-decoration: none;
+}
+
+.advanced-settings-toggle .arrow {
+  margin-right: 6px;
+}
+
+/* Advanced Settings Container (Light Mode) */
+.advanced-settings {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.advanced-settings .note {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+/* FIXED FOOTER */
+.footer {
+  position: fixed;
+  bottom: 0; 
+  left: 0; 
+  width: 100%;
+  background: #fff; 
+  color: #333;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  padding: 0.5rem 0;
+  z-index: 999;
+  text-align: center;
+}
+
+/* Footer Content: 2 blocks side by side, centered horizontally */
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0 auto;
+}
+
+.footer a {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.footer-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.footer-content p:last-of-type {
+opacity: 0.8;
+}
+
+/* Lead Description (Light Mode) */
+.lead-description {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  padding: 1rem;
+  background-color: #fafafa; 
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333;
+  line-height: 1.6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+}
+
+/* --------------- */
+/* DARK MODE       */
+/* --------------- */
 @media (prefers-color-scheme: dark) {
   body {
     background: #1c1c1c;
     color: #ddd;
   }
+
   .container {
     background: #2a2a2a;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   }
+
   label {
     color: #ccc;
   }
+
   input, select {
     background: #3a3a3a;
     border-color: #555;
     color: #ddd;
   }
+
   .time-status {
     color: #aaa;
   }
+
   .countdown {
     color: #aaa;
   }
+
   .totp-value {
     color: #66aaff;
   }
+
   .next-totp {
     color: #ccc;
   }
+
   .btn-totp {
     background: #66aaff; 
     color: #000;
   }
+
   .btn-totp:hover {
     background: #55a0ee;
   }
+
   .btn-url {
     background: #5fd3df;
     color: #000;
   }
+
   .btn-url:hover {
     background: #47c0cb;
   }
+
   .info code {
     background: #333;
   }
+
   .info {
     color: #888;
+  }
+
+  /* Advanced settings toggle text color */
+  .advanced-settings-toggle {
+    color: #66aaff;
+  }
+
+  /* Advanced settings container background & border */
+  .advanced-settings {
+    background: #333;  
+    border: 1px solid #555;
+  }
+
+  .advanced-settings .note {
+    color: #ccc;
+  }
+
+  /* Footer in Dark Mode */
+  .footer {
+    background: #2a2a2a;
+    color: #ddd;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.4);
+  }
+
+  .footer-content p {
+    color: #ccc;
+  }
+  
+  /* Lead Description (Dark Mode) */
+  .lead-description {
+    background-color: #333;
+    color: #ddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
 }

@@ -2,12 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Offline TOTP Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Primary Meta Tags -->
+  <title>Local TOTP Generator</title>
+  <meta name="description" content="Generate secure TOTP codes fully offline using the Web Crypto API. Share or copy TOTPs easily, with advanced settings for algorithm, digits, and period."/>
+  <meta name="keywords" content="TOTP, offline TOTP, time-based one-time password, Web Crypto, two-factor authentication, 2FA, OTP, local, open-source"/>
+  <meta name="author" content="Tommy Vange Rød"/>
+  <meta name="robots" content="index,follow"/>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="Offline TOTP Generator" />
+  <meta property="og:description" content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://your-domain-or-pages.url" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="Offline TOTP Generator" />
+  <meta property="twitter:description" content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <h1>Local TOTP Generator</h1>
+  <!-- Quick Description for Users & SEO -->
+  <p class="lead-description">
+    <strong>Local TOTP Generator</strong> is a secure, offline tool for generating
+    Time-Based One-Time Passwords (TOTPs). With customizable settings for 
+    digit length, algorithm, and period, you can generate codes to meet
+    your exact needs—without relying on any external server.
+  </p>
 
   <div class="container">
     <!-- Time Source Toggle -->
@@ -20,26 +44,42 @@
       <small id="timeSourceStatus" class="time-status">Using device time</small>
     </div>
 
-    <!-- Input Fields -->
+    <!-- Secret Input -->
     <div class="form-group">
       <label for="secret">Secret</label>
       <input type="text" id="secret" value="" />
     </div>
-    <div class="form-group">
-      <label for="digits">Digits</label>
-      <input type="number" id="digits" min="6" max="10" value="6" />
+
+    <!-- Advanced Settings Toggle (text + arrow) -->
+    <div id="toggleAdvanced" class="advanced-settings-toggle">
+      <span id="toggleArrow" class="arrow">▶</span>
+      <span id="toggleText">Show Advanced Settings</span>
     </div>
-    <div class="form-group">
-      <label for="period">Period (seconds)</label>
-      <input type="number" id="period" min="10" value="30" />
-    </div>
-    <div class="form-group">
-      <label for="algorithm">Algorithm</label>
-      <select id="algorithm">
-        <option value="SHA-1">SHA-1</option>
-        <option value="SHA-256">SHA-256</option>
-        <option value="SHA-512">SHA-512</option>
-      </select>
+
+    <!-- Advanced Settings (hidden by default) -->
+    <div id="advancedSettings" class="advanced-settings" style="display: none;">
+      <p class="note">
+        <strong>Note:</strong> The most common TOTP settings are:
+        <em>6 digits</em>, <em>30-second period</em>, and <em>SHA-1</em> algorithm.
+        You only need to change these if your service requires different values.
+      </p>
+
+      <div class="form-group">
+        <label for="digits">Digits</label>
+        <input type="number" id="digits" min="6" max="10" value="6" />
+      </div>
+      <div class="form-group">
+        <label for="period">Period (seconds)</label>
+        <input type="number" id="period" min="10" value="30" />
+      </div>
+      <div class="form-group">
+        <label for="algorithm">Algorithm</label>
+        <select id="algorithm">
+          <option value="SHA-1">SHA-1</option>
+          <option value="SHA-256">SHA-256</option>
+          <option value="SHA-512">SHA-512</option>
+        </select>
+      </div>
     </div>
 
     <!-- TOTP Display -->
@@ -59,14 +99,25 @@
   <div class="info">
     <p>
       This TOTP generator works <strong>fully offline</strong> using the
-      <code>Web Crypto API</code>. It automatically updates whenever fields
+      <code>Web Crypto API</code>. It automatically updates the TOTP and URL whenever fields
       change or paste events occur.
     </p>
-    <p>
-      The link in your browser’s address bar includes the config, so you can share it.
-
-    </p>
   </div>
+
+  <!-- Bottom-Fixed Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>
+        This project is 
+        <a target="_blank" href="https://github.com/tommyvange/Local-TOTP-Generator">open-source</a> (GPL-3.0) and 
+        hosted via <a target="_blank" href="https://pages.cloudflare.com/">Cloudflare Pages</a>
+      </p>
+      <p>
+        Developed with ❤️ by 
+        <a target="_blank" href="https://www.linkedin.com/in/tommyvange/">Tommy Vange Rød</a>
+      </p>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>

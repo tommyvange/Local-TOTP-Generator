@@ -49,7 +49,6 @@ async function hmacSign(key, msg, algorithm) {
 }
 
 // Generate TOTP code
-// nowMs => current Unix time in ms (UTC-based)
 async function generateTOTP(secretBase32, digits, period, algorithm, nowMs) {
   const secret = base32Decode(secretBase32);
   const currentTime = Math.floor(nowMs / 1000);
@@ -74,32 +73,16 @@ async function generateTOTP(secretBase32, digits, period, algorithm, nowMs) {
 }
 
 /*************************************************************
- *                TIME SOURCE (Device vs. Online)
+ *                TIME SOURCE (Device vs Online)
  *************************************************************/
+let timeOffset = 0; // (serverUnixMs) - Date.now()
 
-// We'll store an offset: (serverUnixMs) - (Date.now())
-let timeOffset = 0;  // 0 => using device time exactly
-
-/**
- * Fetch time from timeapi.io in UTC, 
- * then build the correct UTC date from numeric fields
- */
 async function fetchOnlineTime() {
   const response = await fetch('https://www.timeapi.io/api/Time/current/zone?timeZone=UTC');
   if (!response.ok) {
     throw new Error(`Network error: ${response.status}`);
   }
   const data = await response.json();
-  // data = {
-  //   "year":2025,"month":2,"day":5,
-  //   "hour":9,"minute":39,"seconds":32,
-  //   "milliSeconds":449,
-  //   "dateTime":"2025-02-05T09:39:32.4491594",
-  //   ...
-  // }
-  
-  // Construct a Date in UTC from numeric fields
-  // (months in JS are 0-based, so subtract 1 from data.month)
   const serverUnixMs = Date.UTC(
     data.year,
     data.month - 1,
@@ -109,8 +92,28 @@ async function fetchOnlineTime() {
     data.seconds,
     data.milliSeconds
   );
+  return serverUnixMs;
+}
 
-  return serverUnixMs; // ms since 1970-01-01 UTC
+async function handleTimeSourceChange() {
+  timeOffset = 0;
+
+  if (timeSourceEl.value === 'device') {
+    timeSourceStatusEl.textContent = 'Using device time';
+  } else if (timeSourceEl.value === 'online') {
+    timeSourceStatusEl.textContent = 'Fetching online time...';
+    try {
+      const serverMs = await fetchOnlineTime();
+      timeOffset = serverMs - Date.now();
+      timeSourceStatusEl.textContent = 'Using online time (synced once)';
+    } catch (error) {
+      console.error(error);
+      timeOffset = 0;
+      timeSourceEl.value = 'device'; // revert if failed
+      timeSourceStatusEl.textContent = 'Failed to fetch online time. Using device time.';
+    }
+  }
+  await updateTOTP();
 }
 
 /*************************************************************
@@ -131,7 +134,11 @@ const countdownEl = document.getElementById('countdown');
 const copyBtn = document.getElementById('copyBtn');
 const shareBtn = document.getElementById('shareBtn');
 
-let intervalId = null;
+// Advanced toggle
+const toggleAdvancedEl = document.getElementById('toggleAdvanced');
+const advancedSettingsDiv = document.getElementById('advancedSettings');
+const toggleArrowEl = document.getElementById('toggleArrow');
+const toggleTextEl = document.getElementById('toggleText');
 
 /*************************************************************
  *           READ/WRITE URL PARAMS & TOTP UPDATE
@@ -163,9 +170,6 @@ function updateURLParams() {
   window.history.replaceState(null, '', newUrl);
 }
 
-/**
- * Calculate and display TOTP codes using the current config + timeOffset
- */
 async function updateTOTP() {
   const secretVal = secretEl.value.trim();
   const digitsVal = parseInt(digitsEl.value, 10);
@@ -179,26 +183,20 @@ async function updateTOTP() {
     return;
   }
 
-  // Now in ms, adjusted by offset
   const nowMs = Date.now() + timeOffset;
-
   try {
     // Current TOTP
     const current = await generateTOTP(secretVal, digitsVal, periodVal, algorithmVal, nowMs);
     currentTOTPEl.textContent = current;
 
-    // Next TOTP => figure out next step
+    // Next TOTP + countdown
     const currentTimeSec = Math.floor(nowMs / 1000);
     const nextCounter = Math.floor(currentTimeSec / periodVal) + 1;
-    const nextBlockMs = nextCounter * periodVal * 1000; // in ms
-
+    const nextBlockMs = nextCounter * periodVal * 1000;
     const timeLeft = Math.floor((nextBlockMs - nowMs) / 1000);
 
-    // Actually compute next code
     const next = await generateTOTP(secretVal, digitsVal, periodVal, algorithmVal, nextBlockMs);
     nextTOTPEl.textContent = 'Next: ' + next;
-
-    // Countdown
     countdownEl.textContent = `Valid for ${timeLeft}s`;
   } catch (err) {
     console.error(err);
@@ -209,34 +207,11 @@ async function updateTOTP() {
 }
 
 /*************************************************************
- *          TIME SOURCE SELECTION (Device vs Online)
- *************************************************************/
-async function handleTimeSourceChange() {
-  timeOffset = 0; // reset
-  if (timeSourceEl.value === 'device') {
-    timeSourceStatusEl.textContent = 'Using device time';
-  } else if (timeSourceEl.value === 'online') {
-    timeSourceStatusEl.textContent = 'Fetching online time...';
-    try {
-      const serverMs = await fetchOnlineTime();
-      timeOffset = serverMs - Date.now();
-      timeSourceStatusEl.textContent = 'Using online time (synced once)';
-    } catch (error) {
-      console.error(error);
-      timeOffset = 0;
-      timeSourceEl.value = 'device'; // revert
-      timeSourceStatusEl.textContent = 'Failed to fetch online time. Using device time.';
-    }
-  }
-  await updateTOTP();
-}
-
-/*************************************************************
  *             COPY TOTP & SHARE URL BUTTONS
  *************************************************************/
 function showButtonFeedback(button, label) {
   const originalLabel = button.textContent;
-  button.classList.add('copied'); // turn green or something
+  button.classList.add('copied');
   button.textContent = label;
   setTimeout(() => {
     button.classList.remove('copied');
@@ -244,7 +219,6 @@ function showButtonFeedback(button, label) {
   }, 1000);
 }
 
-// Copy TOTP
 copyBtn.addEventListener('click', async () => {
   const totpValue = currentTOTPEl.textContent;
   if (!totpValue || totpValue === '------' || totpValue === 'Error') {
@@ -260,7 +234,6 @@ copyBtn.addEventListener('click', async () => {
   }
 });
 
-// Copy URL
 shareBtn.addEventListener('click', async () => {
   const url = window.location.href;
   try {
@@ -273,13 +246,56 @@ shareBtn.addEventListener('click', async () => {
 });
 
 /*************************************************************
+ *                ADVANCED SETTINGS TOGGLE
+ *************************************************************/
+function toggleAdvancedSettings(forceOpen = false) {
+  if (forceOpen) {
+    // Force open
+    advancedSettingsDiv.style.display = 'block';
+    toggleArrowEl.textContent = '▼';
+    toggleTextEl.textContent = 'Hide Advanced Settings';
+    return;
+  }
+
+  // Otherwise toggle
+  if (advancedSettingsDiv.style.display === 'none') {
+    advancedSettingsDiv.style.display = 'block';
+    toggleArrowEl.textContent = '▼';
+    toggleTextEl.textContent = 'Hide Advanced Settings';
+  } else {
+    advancedSettingsDiv.style.display = 'none';
+    toggleArrowEl.textContent = '▶';
+    toggleTextEl.textContent = 'Show Advanced Settings';
+  }
+}
+
+// Click event on the toggle text/arrow
+toggleAdvancedEl.addEventListener('click', () => {
+  toggleAdvancedSettings();
+});
+
+/*************************************************************
  *                        INIT
  *************************************************************/
 (async function init() {
   // 1. Load URL params
   readParamsFromURL();
 
-  // 2. Handle field changes => update TOTP
+  // 2. If settings differ from standard defaults, auto-open advanced
+  if (
+    digitsEl.value !== '6' ||
+    periodEl.value !== '30' ||
+    algorithmEl.value !== 'SHA-1'
+  ) {
+    toggleAdvancedSettings(true);
+  } else {
+    // Keep it hidden by default
+    advancedSettingsDiv.style.display = 'none';
+    toggleArrowEl.textContent = '▶';
+    toggleTextEl.textContent = 'Show Advanced Settings';
+  }
+
+  // 3. Attach event handlers to fields => update TOTP
   [secretEl, digitsEl, periodEl, algorithmEl].forEach(el => {
     el.addEventListener('input', async () => {
       updateURLParams();
@@ -291,10 +307,10 @@ shareBtn.addEventListener('click', async () => {
     });
   });
 
-  // 3. Time source select
+  // 4. Listen for time source changes
   timeSourceEl.addEventListener('change', handleTimeSourceChange);
 
-  // 4. Initial TOTP
+  // 5. Generate initial TOTP + timer
   await updateTOTP();
-  intervalId = setInterval(updateTOTP, 1000);
+  setInterval(updateTOTP, 1000);
 })();
