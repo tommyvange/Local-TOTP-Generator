@@ -1,7 +1,7 @@
 # --------------------------------------------
 # 1) Main HTML: Short/No-Store Cache
 # --------------------------------------------
-/index.html
+/
   Cache-Control: no-store
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
@@ -11,14 +11,14 @@
   X-Robots-Tag: index, follow
   # Content Security Policy:
   # - default everything to 'self'
-  # - script-src restricted to 'self' + the exact SRI hashes for script.js
-  # - style-src restricted to 'self' + 'unsafe-inline' + the exact SRI hashes for styles.css
-  # - connect-src allows your domain + timeapi.io (if you fetch time from there)
+  # - script-src restricted to 'self' + static.cloudflareinsights.com + exact SRI hashes for script.js
+  # - style-src restricted to 'self' + 'unsafe-inline' + the exact SRI hashes for styles.css (for inline styles)
+  # - connect-src allows your domain + timeapi.io + cloudflareinsights domains (if used by the Insights script)
   # - frame-ancestors none (prevents iframes)
   # - object-src none (no Flash/Silverlight, etc.)
   # - base-uri none (prevent <base> tag from changing origins)
   Content-Security-Policy: default-src 'self'; \
-    script-src 'self' \
+    script-src 'self' https://static.cloudflareinsights.com \
       'sha256-za7/e63fZ/dD4Hf1tjNh/X/vlASjlhhEGNFowTRtGp8=' \
       'sha384-KDQItpCVjLyUczuiAcancwSvnPcg4nmgnnCZ52nQLLF2qXSa42vo5d+4egjYEczB' \
       'sha512-os2T0cF/fLPYK1awvamZs1NZudlB7ViNOgG++CBKvpnKv2RJkR7KrsT2ZcOwXNFr+VpNIehlDbxnHYrHG2rXqg=='; \
@@ -26,7 +26,7 @@
       'sha256-E7IkTj7Hjd6WaXm0B1Eq4ygh84+0RHAzPhto/x/A9ZU=' \
       'sha384-ADrOYXBSy52zL8zEfpok4mTIl/RIgflOUzS7/1c42x2Pzk4GhnxLwYHZR5jl0Dtm' \
       'sha512-MQoEj2aEMhsKrVnpYJX/pbFu+aqPBO0Z3D9fwiS2D1AUrfbVwF6BS8fA2RwYZtyTYB8fwf9mqeSsPrfFOjku+A=='; \
-    connect-src 'self' https://timeapi.io; \
+    connect-src 'self' https://timeapi.io https://static.cloudflareinsights.com https://cloudflareinsights.com; \
     img-src 'self'; \
     object-src 'none'; \
     base-uri 'none'; \
@@ -34,7 +34,6 @@
 
 # --------------------------------------------
 # 2) Static Assets: Long-Cache + Immutable
-#    (Update the filenames/patterns to match your build output)
 # --------------------------------------------
 /styles.css*
   Cache-Control: public, max-age=31536000, immutable
