@@ -1,3 +1,6 @@
+/***************************************************
+ * 1. SVG Icons for Arrows (Right & Down)
+ ***************************************************/
 const arrowRightSVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
   <path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5
@@ -18,7 +21,6 @@ const arrowDownSVG = `
 
 /***************************************************
  * 2. DOM Element References
- *    Grabbing important elements from the HTML.
  ***************************************************/
 const timeSourceSelect  = document.getElementById("timeSource");
 const timeSourceStatus  = document.getElementById("timeSourceStatus");
@@ -41,21 +43,17 @@ const shareBtn          = document.getElementById("shareBtn");
 
 /***************************************************
  * 3. State & Config
- *    Holds internal state for toggles and intervals.
  ***************************************************/
-let isAdvancedOpen = false;    // Tracks advanced settings visibility
-let onlineTimeOffset = 0;      // Offset from online time (if used)
-let totpIntervalId = null;     // Interval ID for updating TOTP continuously
+let isAdvancedOpen   = false; // Tracks advanced settings visibility
+let onlineTimeOffset = 0;     // Offset from fetched online time
+let totpIntervalId   = null;  // Interval ID for TOTP updates
+let fetchAnimationId = null;  // Interval for "fetching" text animation
 
 /***************************************************
- * 4. Utility: Base32 Decode
- *    Decodes a Base32 string (RFC 4648) into a Uint8Array.
+ * 4. Utility: Base32 Decode (RFC 4648)
  ***************************************************/
 function base32Decode(input) {
-  // Allowed Base32 Alphabet
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-  // Remove any trailing "=" padding, uppercase, and strip invalid chars
   const sanitized = input
     .replace(/=+$/, "")
     .toUpperCase()
@@ -64,7 +62,6 @@ function base32Decode(input) {
   let bits = "";
   const output = [];
 
-  // Convert each character to a 5-bit binary string
   for (let i = 0; i < sanitized.length; i++) {
     const val = alphabet.indexOf(sanitized[i]);
     if (val === -1) {
@@ -73,7 +70,6 @@ function base32Decode(input) {
     bits += val.toString(2).padStart(5, "0");
   }
 
-  // Split the concatenated bits into bytes
   for (let j = 0; j + 7 < bits.length; j += 8) {
     output.push(parseInt(bits.substr(j, 8), 2));
   }
@@ -83,13 +79,9 @@ function base32Decode(input) {
 
 /***************************************************
  * 5. Utility: Generate HMAC with Web Crypto
- *    Returns a Uint8Array of the HMAC signature.
  ***************************************************/
 async function hmacSign(keyBytes, msgBytes, algorithm) {
-  // Algorithm specification recognized by Web Crypto
   const algoKey = { name: "HMAC", hash: { name: algorithm } };
-
-  // Import the raw key bytes as an HMAC key
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
     keyBytes,
@@ -97,33 +89,22 @@ async function hmacSign(keyBytes, msgBytes, algorithm) {
     false,
     ["sign"]
   );
-
-  // Perform the HMAC "sign" operation
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, msgBytes);
   return new Uint8Array(signature);
 }
 
 /***************************************************
  * 6. TOTP Generation
- *    Generates a TOTP code (string) given user config.
  ***************************************************/
 async function generateTOTP(secret, timeNow, digits, period, algorithm) {
-  // 1. Convert secret from Base32 → raw bytes
   const keyBytes = base32Decode(secret);
-
-  // 2. Calculate the time step
   const timeStep = Math.floor(timeNow / period);
 
-  // 3. Convert time step to an 8-byte ArrayBuffer (big-endian)
   const msgBytes = new ArrayBuffer(8);
-  const msgView = new DataView(msgBytes);
-  // Only set lower 32 bits
+  const msgView  = new DataView(msgBytes);
   msgView.setUint32(4, timeStep);
 
-  // 4. Compute the HMAC value
-  const hmac = await hmacSign(keyBytes, msgBytes, algorithm);
-
-  // 5. Dynamic Truncation
+  const hmac   = await hmacSign(keyBytes, msgBytes, algorithm);
   const offset = hmac[hmac.length - 1] & 0x0f;
   const binCode =
     ((hmac[offset]     & 0x7f) << 24) |
@@ -131,49 +112,95 @@ async function generateTOTP(secret, timeNow, digits, period, algorithm) {
     ((hmac[offset + 2] & 0xff) <<  8) |
     ((hmac[offset + 3] & 0xff));
 
-  // 6. Modulo to get the code, and then zero-pad
   const fullCode = binCode % (10 ** digits);
   return String(fullCode).padStart(digits, "0");
 }
 
 /***************************************************
- * 7. Get Current Unix Time (Device vs. Online)
- *    Returns current time in seconds, adjusted by offset.
+ * 7. Get Current Unix Time
  ***************************************************/
 function getUnixTime() {
-  const nowMs = Date.now() + onlineTimeOffset;  // Adjust by offset if using online time
-  return Math.floor(nowMs / 1000);
+  return Math.floor((Date.now() + onlineTimeOffset) / 1000);
 }
 
 /***************************************************
- * 8. Fetch Online Time (Optional)
- *    Example uses WorldTimeAPI to set 'onlineTimeOffset'.
+ * 8. Animated "Fetching online time" text
  ***************************************************/
-async function fetchOnlineTimeOffset() {
-  try {
-    const response = await fetch("https://worldtimeapi.org/api/timezone/etc/utc");
-    if (!response.ok) {
-      throw new Error("Network response was not ok.");
-    }
-    const data = await response.json();
-    const utcTimeFromAPI = new Date(data.utc_datetime).getTime(); // ms
-    const localNow = Date.now();
+function startFetchingAnimation() {
+  const dotPatterns = ["(.)", "(..)", "(...)"];
+  let dotIndex = 0;
 
-    // Calculate the difference between reported online UTC and local system time
-    onlineTimeOffset = utcTimeFromAPI - localNow;
-    timeSourceStatus.textContent = "Using online time (WorldTimeAPI)";
-  } catch (err) {
-    console.warn("Failed to fetch online time:", err);
-    // Fallback to device time
-    onlineTimeOffset = 0;
-    timeSourceSelect.value = "device";
-    timeSourceStatus.textContent = "Using device time (fallback)";
+  if (fetchAnimationId) {
+    clearInterval(fetchAnimationId);
+  }
+
+  fetchAnimationId = setInterval(() => {
+    timeSourceStatus.textContent = `Fetching online time ${dotPatterns[dotIndex]}`;
+    dotIndex = (dotIndex + 1) % dotPatterns.length;
+  }, 500);
+}
+
+function stopFetchingAnimation() {
+  if (fetchAnimationId) {
+    clearInterval(fetchAnimationId);
+    fetchAnimationId = null;
   }
 }
 
 /***************************************************
- * 9. Update TOTP Display
- *    Refreshes the displayed current TOTP and next TOTP.
+ * 9. Fetch Online Time (TimeAPI.io)
+ ***************************************************/
+async function fetchOnlineTime() {
+  const response = await fetch("https://www.timeapi.io/api/Time/current/zone?timeZone=UTC");
+  if (!response.ok) {
+    throw new Error(`Network error: ${response.status}`);
+  }
+  const data = await response.json();
+
+  // Build a UTC timestamp from date/time fields
+  const serverUnixMs = Date.UTC(
+    data.year,
+    data.month - 1,
+    data.day,
+    data.hour,
+    data.minute,
+    data.seconds,
+    data.milliSeconds
+  );
+  return serverUnixMs;
+}
+
+/***************************************************
+ * 10. Handle Time Source Changes
+ ***************************************************/
+async function handleTimeSourceChange() {
+  onlineTimeOffset = 0;
+
+  if (timeSourceSelect.value === "device") {
+    stopFetchingAnimation();
+    timeSourceStatus.textContent = "Using device time";
+  } else if (timeSourceSelect.value === "online") {
+    startFetchingAnimation();
+    try {
+      const serverMs = await fetchOnlineTime();
+      onlineTimeOffset = serverMs - Date.now();
+      timeSourceStatus.textContent = "Using online time (synced once)";
+    } catch (err) {
+      console.error("Failed to fetch online time:", err);
+      onlineTimeOffset       = 0;
+      timeSourceSelect.value = "device";
+      timeSourceStatus.textContent = "Failed to fetch online time. Using device time.";
+    } finally {
+      stopFetchingAnimation();
+    }
+  }
+
+  updateURLParams();
+  updateTOTPDisplay();
+}
+
+/***************************************************
+ * 11. Update TOTP Display
  ***************************************************/
 async function updateTOTPDisplay() {
   const secret    = secretInput.value.trim();
@@ -181,7 +208,6 @@ async function updateTOTPDisplay() {
   const period    = parseInt(periodInput.value, 10);
   const algorithm = algorithmSelect.value;
 
-  // If secret is empty or invalid, show placeholders
   if (!secret) {
     currentTOTPElem.textContent = "------";
     nextTOTPElem.textContent    = "Next: ------";
@@ -189,27 +215,21 @@ async function updateTOTPDisplay() {
     return;
   }
 
-  const unixTime = getUnixTime();
-  // Current time step
+  const unixTime    = getUnixTime();
   const currentStep = Math.floor(unixTime / period);
-  // The next step starts at:
-  const nextStepTime = (currentStep + 1) * period;
+  const nextStep    = (currentStep + 1) * period;
 
   try {
-    // Generate current TOTP
     const currentCode = await generateTOTP(secret, unixTime, digits, period, algorithm);
     currentTOTPElem.textContent = currentCode;
 
-    // Generate the next TOTP for preview
-    const nextCode = await generateTOTP(secret, nextStepTime, digits, period, algorithm);
+    const nextCode = await generateTOTP(secret, nextStep, digits, period, algorithm);
     nextTOTPElem.textContent = `Next: ${nextCode}`;
 
-    // Countdown until next TOTP
-    const secondsLeft = nextStepTime - unixTime;
+    const secondsLeft = nextStep - unixTime;
     countdownElem.textContent = `Valid for ${secondsLeft}s`;
   } catch (err) {
     console.error("Error generating TOTP:", err);
-    // If there's an error (e.g. invalid base32), show error placeholders
     currentTOTPElem.textContent = "Error";
     nextTOTPElem.textContent    = "Next: Error";
     countdownElem.textContent   = "Valid for --s";
@@ -217,15 +237,14 @@ async function updateTOTPDisplay() {
 }
 
 /***************************************************
- * 10. Update URL Params (Shareable Link)
- *     Reflects current fields in the query string.
+ * 12. Update URL Params (Shareable Link)
  ***************************************************/
 function updateURLParams() {
   const params = new URLSearchParams();
-  params.set("secret", secretInput.value.trim());
-  params.set("digits", digitsInput.value);
-  params.set("period", periodInput.value);
-  params.set("algorithm", algorithmSelect.value);
+  params.set("secret",     secretInput.value.trim());
+  params.set("digits",     digitsInput.value);
+  params.set("period",     periodInput.value);
+  params.set("algorithm",  algorithmSelect.value);
   params.set("timeSource", timeSourceSelect.value);
 
   const newURL = `${window.location.pathname}?${params.toString()}`;
@@ -233,8 +252,7 @@ function updateURLParams() {
 }
 
 /***************************************************
- * 11. Load Config from URL
- *     Reads query params and updates form fields.
+ * 13. Load Config from URL
  ***************************************************/
 function loadConfigFromURL() {
   const params = new URLSearchParams(window.location.search);
@@ -257,54 +275,63 @@ function loadConfigFromURL() {
 }
 
 /***************************************************
- * 12. Event Handlers
- *     Interactions for toggles, input changes, copy, etc.
+ * 14. Auto-Open Advanced if Non-Default
+ *     Default is digits=6, period=30, algorithm=SHA-1
  ***************************************************/
+function openOrCloseAdvancedPanel() {
+  const defaultDigits     = 6;
+  const defaultPeriod     = 30;
+  const defaultAlgorithm  = "SHA-1";
 
-// Toggle the visibility of advanced settings
+  // Compare the current inputs against the defaults
+  const isNonDefault =
+    parseInt(digitsInput.value, 10) !== defaultDigits ||
+    parseInt(periodInput.value, 10) !== defaultPeriod ||
+    algorithmSelect.value !== defaultAlgorithm;
+
+  // If user settings differ from defaults, show the advanced panel
+  if (isNonDefault) {
+    isAdvancedOpen = true;
+    advancedSettings.style.display = "block";
+    toggleArrow.innerHTML = arrowDownSVG;
+    toggleText.textContent = "Hide Advanced Settings";
+  } else {
+    isAdvancedOpen = false;
+    advancedSettings.style.display = "none";
+    toggleArrow.innerHTML = arrowRightSVG;
+    toggleText.textContent = "Show Advanced Settings";
+  }
+}
+
+/***************************************************
+ * 15. Event Listeners
+ ***************************************************/
 toggleAdvanced.addEventListener("click", () => {
   isAdvancedOpen = !isAdvancedOpen;
   advancedSettings.style.display = isAdvancedOpen ? "block" : "none";
-
-  // Swap the arrow icon
   toggleArrow.innerHTML = isAdvancedOpen ? arrowDownSVG : arrowRightSVG;
-
-  // Update the toggle text
   toggleText.textContent = isAdvancedOpen
     ? "Hide Advanced Settings"
     : "Show Advanced Settings";
 });
 
-// Handle time source changes (device vs. online)
-timeSourceSelect.addEventListener("change", async () => {
-  const selected = timeSourceSelect.value;
-  if (selected === "online") {
-    await fetchOnlineTimeOffset();
-  } else {
-    onlineTimeOffset = 0;
-    timeSourceStatus.textContent = "Using device time";
-  }
+timeSourceSelect.addEventListener("change", handleTimeSourceChange);
 
-  updateURLParams();
-  updateTOTPDisplay(); // Refresh TOTP display immediately
-});
-
-// Update TOTP and URL whenever relevant inputs change
-[secretInput, digitsInput, periodInput, algorithmSelect].forEach((el) => {
+[secretInput, digitsInput, periodInput, algorithmSelect].forEach(el => {
   el.addEventListener("input", () => {
     updateURLParams();
     updateTOTPDisplay();
+    // (Optional) If you want the advanced panel to open 
+    // immediately when user changes from default, you could 
+    // also call openOrCloseAdvancedPanel() here.
   });
 });
 
-// Copy TOTP button
 copyBtn.addEventListener("click", async () => {
   const totpValue = currentTOTPElem.textContent.trim();
-  // Ensure there's a valid TOTP to copy
   if (totpValue && totpValue !== "------" && totpValue !== "Error") {
     try {
       await navigator.clipboard.writeText(totpValue);
-      // Temporary feedback by changing button color
       copyBtn.classList.add("copied");
       setTimeout(() => copyBtn.classList.remove("copied"), 1000);
     } catch (err) {
@@ -313,11 +340,9 @@ copyBtn.addEventListener("click", async () => {
   }
 });
 
-// Copy URL button
 shareBtn.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(window.location.href);
-    // Temporary feedback by changing button color
     shareBtn.classList.add("copied");
     setTimeout(() => shareBtn.classList.remove("copied"), 1000);
   } catch (err) {
@@ -326,8 +351,7 @@ shareBtn.addEventListener("click", async () => {
 });
 
 /***************************************************
- * 13. Initialization
- *     Sets up the UI based on URL, time source, etc.
+ * 16. Initialization
  ***************************************************/
 
 // Styled disclaimer message
@@ -364,27 +388,23 @@ console.log(
   'color: #1d6f42; text-decoration: underline; font-size: 14px;margin-bottom: 15px;'
 );
 
-
-// 1) Load config from URL to populate form fields
+// 1) Load config from URL
 loadConfigFromURL();
 
-// 2) If online time is selected, fetch offset
+// 2) Check if the advanced settings differ from default
+openOrCloseAdvancedPanel();
+
+// 3) If "online" was chosen in URL, fetch time
 if (timeSourceSelect.value === "online") {
-  fetchOnlineTimeOffset().then(() => {
-    updateTOTPDisplay();
-  });
+  handleTimeSourceChange().catch(err => console.error(err));
 } else {
   timeSourceStatus.textContent = "Using device time";
 }
 
-// 3) Initialize advanced settings toggle (collapsed by default)
-toggleArrow.innerHTML = arrowRightSVG;
-advancedSettings.style.display = "none";
-
-// 4) Start an interval to continuously update the TOTP
+// 4) Start TOTP auto-refresh
 totpIntervalId = setInterval(() => {
   updateTOTPDisplay();
 }, 1000);
 
-// 5) Perform an immediate refresh on load
+// 5) First-time TOTP refresh
 updateTOTPDisplay();
