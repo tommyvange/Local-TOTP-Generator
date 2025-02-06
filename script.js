@@ -184,7 +184,7 @@ async function handleTimeSourceChange() {
     try {
       const serverMs = await fetchOnlineTime();
       onlineTimeOffset = serverMs - Date.now();
-      timeSourceStatus.textContent = "Using online time (synced once)";
+      timeSourceStatus.textContent = "Using online time (TimeAPI.io)";
     } catch (err) {
       console.error("Failed to fetch online time:", err);
       onlineTimeOffset       = 0;
