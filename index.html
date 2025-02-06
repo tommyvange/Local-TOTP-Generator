@@ -3,29 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <!-- Primary Meta Tags -->
   <title>Local TOTP Generator</title>
-  <meta name="description" content="Generate secure TOTP codes fully offline using the Web Crypto API. Share or copy TOTPs easily, with advanced settings for algorithm, digits, and period."/>
-  <meta name="keywords" content="TOTP, offline TOTP, time-based one-time password, Web Crypto, two-factor authentication, 2FA, OTP, local, open-source"/>
-  <meta name="author" content="Tommy Vange Rød"/>
+  <meta 
+    name="description" 
+    content="Generate secure TOTP codes fully offline using the Web Crypto API. Share or copy TOTPs easily, with advanced settings for algorithm, digits, and period."
+  />
+  <meta 
+    name="keywords" 
+    content="TOTP, offline TOTP, time-based one-time password, Web Crypto, two-factor authentication, 2FA, OTP, local, open-source"
+  />
+  <meta name="author" content="Tommy Vange Rød" />
   <meta name="robots" content="index,follow"/>
 
   <!-- Open Graph / Facebook -->
   <meta property="og:title" content="Offline TOTP Generator" />
-  <meta property="og:description" content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." />
+  <meta 
+    property="og:description" 
+    content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." 
+  />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://your-domain-or-pages.url" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:title" content="Offline TOTP Generator" />
-  <meta property="twitter:description" content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." />
+  <meta 
+    property="twitter:description" 
+    content="Generate secure TOTP codes fully offline. Advanced settings for digits, period, and algorithm." 
+  />
 
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Link to external CSS -->
+  <link href="./styles.css" rel="stylesheet" integrity="sha256-E7IkTj7Hjd6WaXm0B1Eq4ygh84+0RHAzPhto/x/A9ZU= sha384-ADrOYXBSy52zL8zEfpok4mTIl/RIgflOUzS7/1c42x2Pzk4GhnxLwYHZR5jl0Dtm sha512-MQoEj2aEMhsKrVnpYJX/pbFu+aqPBO0Z3D9fwiS2D1AUrfbVwF6BS8fA2RwYZtyTYB8fwf9mqeSsPrfFOjku+A==" crossorigin="anonymous" />
 </head>
+
 <body>
+  <!-- Application Title -->
   <h1>Local TOTP Generator</h1>
-  <!-- Quick Description for Users & SEO -->
+
+  <!-- Short Description for Users & SEO -->
   <p class="lead-description">
     <strong>Local TOTP Generator</strong> is a secure, offline tool for generating
     Time-Based One-Time Passwords (TOTPs). With customizable settings for 
@@ -33,8 +50,9 @@
     your exact needs—without relying on any external server.
   </p>
 
+  <!-- Main Container for the Application Form and Controls -->
   <div class="container">
-    <!-- Time Source Toggle -->
+    <!-- Time Source Selection -->
     <div class="form-group">
       <label for="timeSource">Time Source</label>
       <select id="timeSource">
@@ -44,19 +62,19 @@
       <small id="timeSourceStatus" class="time-status">Using device time</small>
     </div>
 
-    <!-- Secret Input -->
+    <!-- Secret Input Field -->
     <div class="form-group">
       <label for="secret">Secret</label>
       <input type="text" id="secret" value="" />
     </div>
 
-    <!-- Advanced Settings Toggle (text + arrow) -->
+    <!-- Toggle for Advanced Settings (click to expand/collapse) -->
     <div id="toggleAdvanced" class="advanced-settings-toggle">
       <span id="toggleArrow" class="arrow">▶</span>
       <span id="toggleText">Show Advanced Settings</span>
     </div>
 
-    <!-- Advanced Settings (hidden by default) -->
+    <!-- Advanced Settings Section (hidden by default) -->
     <div id="advancedSettings" class="advanced-settings" style="display: none;">
       <p class="note">
         <strong>Note:</strong> The most common TOTP settings are:
@@ -64,14 +82,19 @@
         You only need to change these if your service requires different values.
       </p>
 
+      <!-- Digits Input -->
       <div class="form-group">
         <label for="digits">Digits</label>
         <input type="number" id="digits" min="6" max="10" value="6" />
       </div>
+
+      <!-- Period Input -->
       <div class="form-group">
         <label for="period">Period (seconds)</label>
         <input type="number" id="period" min="10" value="30" />
       </div>
+
+      <!-- Algorithm Selection -->
       <div class="form-group">
         <label for="algorithm">Algorithm</label>
         <select id="algorithm">
@@ -82,20 +105,21 @@
       </div>
     </div>
 
-    <!-- TOTP Display -->
+    <!-- TOTP Display: Current Code, Next Code, and Countdown -->
     <div class="totp-section">
       <div id="countdown" class="countdown">Valid for --s</div>
       <div id="currentTOTP" class="totp-value">------</div>
       <div id="nextTOTP" class="next-totp">Next: ------</div>
     </div>
 
-    <!-- Buttons -->
+    <!-- Buttons for Copying TOTP and URL -->
     <div class="buttons">
       <button id="copyBtn" class="btn-totp">Copy TOTP</button>
       <button id="shareBtn" class="btn-url">Copy URL</button>
     </div>
   </div>
 
+  <!-- Additional Information About the Tool -->
   <div class="info">
     <p>
       This TOTP generator works <strong>fully offline</strong> using the
@@ -104,7 +128,7 @@
     </p>
   </div>
 
-  <!-- Bottom-Fixed Footer -->
+  <!-- Bottom-Fixed Footer with Project Links -->
   <footer class="footer">
     <div class="footer-content">
       <p>
@@ -119,6 +143,7 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- JavaScript for TOTP Logic -->
+  <script type="text/javascript" src="./script.js" integrity="sha256-ZKaLFoJ8Bx1HojmXUvum4fWOGcxdZvSOxhyvUOJwhcw= sha384-hK9+MT9bnZjQA2l18WvpZ9DZn8mvyHgKFUpMhNMGYBvhMPBso3GXRvoLASz5Ak4L sha512-mtB0gJLdKauwUH5I6X832MfoNSYyrRKREyQaxc6T7Bjv5jvqcSuAfhfGGWRnM5xW6lTkoqE8ZI6b3EDXVxHnlw==" crossorigin="anonymous"></script>
 </body>
 </html>

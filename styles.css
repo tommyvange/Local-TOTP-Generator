@@ -1,4 +1,6 @@
-/* RESET & TYPOGRAPHY */
+/* --------------------------------------------- */
+/* 1. RESET & GLOBAL STYLES                     */
+/* --------------------------------------------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,14 +8,15 @@
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* Light Mode (Default) */
+/* --------------------------------------------- */
+/* 2. BODY & CONTAINER                           */
+/* --------------------------------------------- */
 body {
   background: linear-gradient(120deg, #f4f6f8 0%, #eef2f6 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Padding-top for content, padding-bottom so it's not hidden behind the fixed footer */
-  padding: 2rem 0 6rem;
+  padding: 2rem 1rem 6rem;
   color: #333;
   min-height: 100vh;
 }
@@ -24,7 +27,6 @@ h1 {
   text-align: center;
 }
 
-/* Container (Card) */
 .container {
   background: #ffffff;
   border-radius: 12px;
@@ -35,7 +37,9 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
-/* Form groups */
+/* --------------------------------------------- */
+/* 3. FORM ELEMENTS                              */
+/* --------------------------------------------- */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -47,7 +51,8 @@ label {
   font-weight: 600;
 }
 
-input, select {
+input,
+select {
   padding: 0.6rem 0.8rem;
   font-size: 1rem;
   border: 1px solid #ccc;
@@ -56,7 +61,8 @@ input, select {
   outline: none;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
   border-color: #007BFF;
 }
 
@@ -66,7 +72,9 @@ small.time-status {
   margin-top: 0.4rem;
 }
 
-/* TOTP Section */
+/* --------------------------------------------- */
+/* 4. TOTP DISPLAY & BUTTONS                    */
+/* --------------------------------------------- */
 .totp-section {
   text-align: center;
   margin: 1.5rem 0;
@@ -81,7 +89,7 @@ small.time-status {
 .totp-value {
   font-size: 2.4rem;
   font-weight: 700;
-  color: #007BFF; 
+  color: #007BFF;
   margin: 0.5rem 0;
   letter-spacing: 6px;
 }
@@ -92,7 +100,6 @@ small.time-status {
   margin-top: 0.4rem;
 }
 
-/* Buttons */
 .buttons {
   display: flex;
   gap: 1rem;
@@ -100,11 +107,10 @@ small.time-status {
   margin-top: 1rem;
 }
 
-/* Copy TOTP button (blue) */
 .btn-totp {
   cursor: pointer;
   border: none;
-  background: #007BFF; /* blue accent */
+  background: #007BFF;
   color: #fff;
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -121,11 +127,10 @@ small.time-status {
   transform: scale(0.97);
 }
 
-/* Copy URL button (teal) */
 .btn-url {
   cursor: pointer;
   border: none;
-  background: #17a2b8; /* teal accent */
+  background: #17a2b8;
   color: #fff;
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -142,12 +147,13 @@ small.time-status {
   transform: scale(0.97);
 }
 
-/* Temporary "Copied!" feedback */
 button.copied {
-  background: #28a745 !important; /* green for "Copied!" feedback */
+  background: #28a745 !important;
 }
 
-/* Info Section */
+/* --------------------------------------------- */
+/* 5. INFO & FOOTER                             */
+/* --------------------------------------------- */
 .info {
   max-width: 450px;
   text-align: center;
@@ -162,61 +168,25 @@ button.copied {
   border-radius: 4px;
 }
 
-/* ADVANCED SETTINGS TOGGLE (Light Mode) */
-.advanced-settings-toggle {
-  display: inline-block;
-  cursor: pointer;
-  color: #007BFF;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  user-select: none;
-  text-decoration: none;
-}
-
-.advanced-settings-toggle:hover {
-  text-decoration: none;
-}
-
-.advanced-settings-toggle .arrow {
-  margin-right: 6px;
-}
-
-/* Advanced Settings Container (Light Mode) */
-.advanced-settings {
-  background: #f8f9fa;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.advanced-settings .note {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 1rem;
-}
-
-/* FIXED FOOTER */
 .footer {
   position: fixed;
-  bottom: 0; 
-  left: 0; 
+  bottom: 0;
+  left: 0;
   width: 100%;
-  background: #fff; 
+  background: #fff;
   color: #333;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-  padding: 0.5rem 0;
+  padding: 0.8rem 0.5rem;
   z-index: 999;
   text-align: center;
 }
 
-/* Footer Content: 2 blocks side by side, centered horizontally */
 .footer-content {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.6rem;
   margin: 0 auto;
 }
 
@@ -232,15 +202,17 @@ button.copied {
 }
 
 .footer-content p:last-of-type {
-opacity: 0.8;
+  opacity: 0.8;
 }
 
-/* Lead Description (Light Mode) */
+/* --------------------------------------------- */
+/* 6. ADVANCED SETTINGS TOGGLE                  */
+/* --------------------------------------------- */
 .lead-description {
   max-width: 600px;
   margin: 0 auto 2rem;
   padding: 1rem;
-  background-color: #fafafa; 
+  background-color: #fafafa;
   border-radius: 8px;
   text-align: center;
   font-size: 1.1rem;
@@ -249,99 +221,115 @@ opacity: 0.8;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
 }
 
-/* --------------- */
-/* DARK MODE       */
-/* --------------- */
+.advanced-settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #007BFF;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  user-select: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.advanced-settings-toggle .arrow {
+  margin-right: 6px;
+}
+
+.advanced-settings-toggle .arrow svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  display: block;
+  fill: currentColor;
+}
+
+.advanced-settings {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.advanced-settings .note {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+/* --------------------------------------------- */
+/* 7. DARK MODE (PREFERS-COLOR-SCHEME: DARK)    */
+/* --------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   body {
     background: #1c1c1c;
     color: #ddd;
   }
-
   .container {
     background: #2a2a2a;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   }
-
   label {
     color: #ccc;
   }
-
-  input, select {
+  input,
+  select {
     background: #3a3a3a;
     border-color: #555;
     color: #ddd;
   }
-
   .time-status {
     color: #aaa;
   }
-
   .countdown {
     color: #aaa;
   }
-
   .totp-value {
     color: #66aaff;
   }
-
   .next-totp {
     color: #ccc;
   }
-
   .btn-totp {
-    background: #66aaff; 
+    background: #66aaff;
     color: #000;
   }
-
   .btn-totp:hover {
     background: #55a0ee;
   }
-
   .btn-url {
     background: #5fd3df;
     color: #000;
   }
-
   .btn-url:hover {
     background: #47c0cb;
   }
-
   .info code {
     background: #333;
   }
-
   .info {
     color: #888;
   }
-
-  /* Advanced settings toggle text color */
   .advanced-settings-toggle {
     color: #66aaff;
   }
-
-  /* Advanced settings container background & border */
   .advanced-settings {
-    background: #333;  
+    background: #333;
     border: 1px solid #555;
   }
-
   .advanced-settings .note {
     color: #ccc;
   }
-
-  /* Footer in Dark Mode */
   .footer {
     background: #2a2a2a;
     color: #ddd;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.4);
   }
-
   .footer-content p {
     color: #ccc;
   }
-  
-  /* Lead Description (Dark Mode) */
   .lead-description {
     background-color: #333;
     color: #ddd;
