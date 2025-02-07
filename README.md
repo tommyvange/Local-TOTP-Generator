@@ -122,6 +122,16 @@ Local TOTP Generator is released under the [GPL-3.0 License](LICENSE). You are f
 
 ### Tommy Vange Rød
 
-I am the sole developer of this project. You can find more of my work on my [GitHub profile](https://github.com/tommyvange) or connect with me on [LinkedIn](https://www.linkedin.com/in/tommyvange/).
+I am the main developer of this project. You can find more of my work on my [GitHub profile](https://github.com/tommyvange) or connect with me on [LinkedIn](https://www.linkedin.com/in/tommyvange/).
+
+### Collaborators
+
+<!-- readme: collaborators -start -->
+<!-- readme: collaborators -end -->
+
+### Contributors
+
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->
 
 ----------
