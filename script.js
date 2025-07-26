@@ -1,4 +1,12 @@
 /***************************************************
+ * 0. Migrate ? to # on first load for backward compatibility
+ ***************************************************/
+if (window.location.search && !window.location.hash) {
+  window.location.hash = window.location.search.replace(/^\?/, '');
+  window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+}
+
+/***************************************************
  * 1. SVG Icons for Arrows (Right & Down)
  ***************************************************/
 const arrowRightSVG = `
@@ -55,9 +63,9 @@ let fetchAnimationId = null;  // Interval for "fetching" text animation
 function base32Decode(input) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const sanitized = input
-    .replace(/=+$/, "")
-    .toUpperCase()
-    .replace(/[^A-Z2-7]+/g, "");
+      .replace(/=+$/, "")
+      .toUpperCase()
+      .replace(/[^A-Z2-7]+/g, "");
 
   let bits = "";
   const output = [];
@@ -83,11 +91,11 @@ function base32Decode(input) {
 async function hmacSign(keyBytes, msgBytes, algorithm) {
   const algoKey = { name: "HMAC", hash: { name: algorithm } };
   const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    algoKey,
-    false,
-    ["sign"]
+      "raw",
+      keyBytes,
+      algoKey,
+      false,
+      ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, msgBytes);
   return new Uint8Array(signature);
@@ -102,15 +110,17 @@ async function generateTOTP(secret, timeNow, digits, period, algorithm) {
 
   const msgBytes = new ArrayBuffer(8);
   const msgView  = new DataView(msgBytes);
-  msgView.setUint32(4, timeStep);
+  // Write timeStep as big-endian 64bit
+  msgView.setUint32(0, 0); // high 4 bytes
+  msgView.setUint32(4, timeStep); // low 4 bytes
 
   const hmac   = await hmacSign(keyBytes, msgBytes, algorithm);
   const offset = hmac[hmac.length - 1] & 0x0f;
   const binCode =
-    ((hmac[offset]     & 0x7f) << 24) |
-    ((hmac[offset + 1] & 0xff) << 16) |
-    ((hmac[offset + 2] & 0xff) <<  8) |
-    ((hmac[offset + 3] & 0xff));
+      ((hmac[offset]     & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) <<  8) |
+      ((hmac[offset + 3] & 0xff));
 
   const fullCode = binCode % (10 ** digits);
   return String(fullCode).padStart(digits, "0");
@@ -159,13 +169,13 @@ async function fetchOnlineTime() {
 
   // Build a UTC timestamp from date/time fields
   const serverUnixMs = Date.UTC(
-    data.year,
-    data.month - 1,
-    data.day,
-    data.hour,
-    data.minute,
-    data.seconds,
-    data.milliSeconds
+      data.year,
+      data.month - 1,
+      data.day,
+      data.hour,
+      data.minute,
+      data.seconds,
+      data.milliSeconds
   );
   return serverUnixMs;
 }
@@ -237,7 +247,7 @@ async function updateTOTPDisplay() {
 }
 
 /***************************************************
- * 12. Update URL Params (Shareable Link)
+ * 12. Update URL Params (Shareable Link) [Now uses HASH]
  ***************************************************/
 function updateURLParams() {
   const params = new URLSearchParams();
@@ -247,15 +257,16 @@ function updateURLParams() {
   params.set("algorithm",  algorithmSelect.value);
   params.set("timeSource", timeSourceSelect.value);
 
-  const newURL = `${window.location.pathname}?${params.toString()}`;
-  window.history.replaceState(null, "", newURL);
+  const newHash = "#" + params.toString();
+  window.history.replaceState(null, "", window.location.pathname + newHash);
 }
 
 /***************************************************
- * 13. Load Config from URL
+ * 13. Load Config from URL [Now from HASH]
  ***************************************************/
 function loadConfigFromURL() {
-  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+  const params = new URLSearchParams(hash);
 
   if (params.has("secret")) {
     secretInput.value = params.get("secret");
@@ -285,9 +296,9 @@ function openOrCloseAdvancedPanel() {
 
   // Compare the current inputs against the defaults
   const isNonDefault =
-    parseInt(digitsInput.value, 10) !== defaultDigits ||
-    parseInt(periodInput.value, 10) !== defaultPeriod ||
-    algorithmSelect.value !== defaultAlgorithm;
+      parseInt(digitsInput.value, 10) !== defaultDigits ||
+      parseInt(periodInput.value, 10) !== defaultPeriod ||
+      algorithmSelect.value !== defaultAlgorithm;
 
   // If user settings differ from defaults, show the advanced panel
   if (isNonDefault) {
@@ -311,8 +322,8 @@ toggleAdvanced.addEventListener("click", () => {
   advancedSettings.style.display = isAdvancedOpen ? "block" : "none";
   toggleArrow.innerHTML = isAdvancedOpen ? arrowDownSVG : arrowRightSVG;
   toggleText.textContent = isAdvancedOpen
-    ? "Hide Advanced Settings"
-    : "Show Advanced Settings";
+      ? "Hide Advanced Settings"
+      : "Show Advanced Settings";
 });
 
 timeSourceSelect.addEventListener("change", handleTimeSourceChange);
@@ -356,36 +367,36 @@ shareBtn.addEventListener("click", async () => {
 
 // Styled disclaimer message
 console.log(
-  '%cDISCLAIMER: %cFor your security, never paste anything into the browser console unless you are absolutely sure what you are doing.',
-  'color: red; font-weight: bold; font-size: 20px;margin-top: 15px;',
-  'color: yellow; font-weight: normal; font-size: 18px;margin-bottom: 15px;'
+    '%cDISCLAIMER: %cFor your security, never paste anything into the browser console unless you are absolutely sure what you are doing.',
+    'color: red; font-weight: bold; font-size: 20px;margin-top: 15px;',
+    'color: yellow; font-weight: normal; font-size: 18px;margin-bottom: 15px;'
 );
 
 // Styled personal boast message
 console.log(
-  '%cThis projected was created with ❤️ by Tommy Vange Rød' +
-  '%c\n\n\nLinkedIn Profile: %chttps://www.linkedin.com/in/tommyvange/' +
-  '%c\nGitHub Profile: %chttps://github.com/tommyvange',
-  'color: #fff; background: #007BFF; padding: 4px 8px; border-radius: 4px; font-size: 16px;margin-top: 15px;',
-  'color: #007BFF; font-style: italic; font-size: 14px;',
-  'color: #1d6f42; text-decoration: underline; font-size: 14px;',
-  'color: #007BFF; font-style: italic; font-size: 14px;',
-  'color: #1d6f42; text-decoration: underline; font-size: 14px;margin-bottom: 15px;'
+    '%cThis projected was created with ❤️ by Tommy Vange Rød' +
+    '%c\n\n\nLinkedIn Profile: %chttps://www.linkedin.com/in/tommyvange/' +
+    '%c\nGitHub Profile: %chttps://github.com/tommyvange',
+    'color: #fff; background: #007BFF; padding: 4px 8px; border-radius: 4px; font-size: 16px;margin-top: 15px;',
+    'color: #007BFF; font-style: italic; font-size: 14px;',
+    'color: #1d6f42; text-decoration: underline; font-size: 14px;',
+    'color: #007BFF; font-style: italic; font-size: 14px;',
+    'color: #1d6f42; text-decoration: underline; font-size: 14px;margin-bottom: 15px;'
 );
 
 // Project links
 console.log(
-  '%cThe project is 100%% open-source, licensed under GPL-3.0 and hosted via Cloudflare Pages.' +
-  '%c\n\n\nProject: %chttps://github.com/tommyvange/Local-TOTP-Generator' +
-  '%c\nLicense: %chttps://github.com/tommyvange/Local-TOTP-Generator/blob/main/LICENSE' +
-  '%c\nCloudflare Pages: %chttps://pages.cloudflare.com/',
-  'color: #007BFF; font-size: 14px;margin-top: 15px;',
-  'color: #007BFF; font-style: italic; font-size: 14px;',
-  'color: #1d6f42; text-decoration: underline; font-size: 14px;',
-  'color: #007BFF; font-style: italic; font-size: 14px;',
-  'color: #1d6f42; text-decoration: underline; font-size: 14px;',
-  'color: #007BFF; font-style: italic; font-size: 14px;',
-  'color: #1d6f42; text-decoration: underline; font-size: 14px;margin-bottom: 15px;'
+    '%cThe project is 100%% open-source, licensed under GPL-3.0 and hosted via Cloudflare Pages.' +
+    '%c\n\n\nProject: %chttps://github.com/tommyvange/Local-TOTP-Generator' +
+    '%c\nLicense: %chttps://github.com/tommyvange/Local-TOTP-Generator/blob/main/LICENSE' +
+    '%c\nCloudflare Pages: %chttps://pages.cloudflare.com/',
+    'color: #007BFF; font-size: 14px;margin-top: 15px;',
+    'color: #007BFF; font-style: italic; font-size: 14px;',
+    'color: #1d6f42; text-decoration: underline; font-size: 14px;',
+    'color: #007BFF; font-style: italic; font-size: 14px;',
+    'color: #1d6f42; text-decoration: underline; font-size: 14px;',
+    'color: #007BFF; font-style: italic; font-size: 14px;',
+    'color: #1d6f42; text-decoration: underline; font-size: 14px;margin-bottom: 15px;'
 );
 
 // 1) Load config from URL
